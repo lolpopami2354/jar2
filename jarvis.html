@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>J.A.R.V.I.S.</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            color: #00d4ff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Animated background grid */
+        .bg-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .bg-glow {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(0, 212, 255, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            width: 90%;
+            max-width: 800px;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 3rem;
+            font-weight: 200;
+            letter-spacing: 8px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        .subtitle {
+            font-size: 0.9rem;
+            letter-spacing: 4px;
+            opacity: 0.6;
+            margin-bottom: 60px;
+            text-transform: uppercase;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        /* Core circle */
+        .core-container {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 50px;
+        }
+
+        .core-ring {
+            position: absolute;
+            border: 2px solid rgba(0, 212, 255, 0.3);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .core-ring:nth-child(1) { width: 200px; height: 200px; animation: spin 20s linear infinite; }
+        .core-ring:nth-child(2) { width: 160px; height: 160px; animation: spin 15s linear infinite reverse; }
+        .core-ring:nth-child(3) { width: 120px; height: 120px; animation: spin 10s linear infinite; }
+
+        .core-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle, #00d4ff 0%, rgba(0, 212, 255, 0.2) 50%, transparent 70%);
+            border-radius: 50%;
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.6);
+            transition: all 0.3s ease;
+        }
+
+        .core-center.listening {
+            background: radial-gradient(circle, #ff3366 0%, rgba(255, 51, 102, 0.2) 50%, transparent 70%);
+            box-shadow: 0 0 50px rgba(255, 51, 102, 0.8);
+            animation: heartbeat 0.8s ease-in-out infinite;
+        }
+
+        .core-center.speaking {
+            background: radial-gradient(circle, #00ff88 0%, rgba(0, 255, 136, 0.2) 50%, transparent 70%);
+            box-shadow: 0 0 50px rgba(0, 255, 136, 0.8);
+        }
+
+        @keyframes spin {
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        @keyframes heartbeat {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.2); }
+        }
+
+        /* Waveform */
+        .waveform {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            height: 60px;
+            margin-bottom: 30px;
+            opacity: 0.3;
+            transition: opacity 0.3s;
+        }
+
+        .waveform.active {
+            opacity: 1;
+        }
+
+        .wave-bar {
+            width: 4px;
+            background: #00d4ff;
+            border-radius: 2px;
+            transition: height 0.1s ease;
+        }
+
+        /* Status */
+        .status {
+            font-size: 1.1rem;
+            letter-spacing: 2px;
+            min-height: 30px;
+            margin-bottom: 20px;
+            opacity: 0.8;
+        }
+
+        /* Chat log */
+        .chat-log {
+            background: rgba(0, 212, 255, 0.05);
+            border: 1px solid rgba(0, 212, 255, 0.15);
+            border-radius: 12px;
+            padding: 20px;
+            min-height: 120px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 30px;
+            text-align: left;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .chat-log::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-log::-webkit-scrollbar-thumb {
+            background: rgba(0, 212, 255, 0.3);
+            border-radius: 3px;
+        }
+
+        .message {
+            margin-bottom: 12px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .message.user {
+            background: rgba(0, 212, 255, 0.1);
+            border-left: 3px solid #00d4ff;
+        }
+
+        .message.jarvis {
+            background: rgba(0, 255, 136, 0.08);
+            border-left: 3px solid #00ff88;
+            color: #b0ffe0;
+        }
+
+        .message .label {
+            font-size: 0.75rem;
+            opacity: 0.6;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: transparent;
+            border: 1px solid rgba(0, 212, 255, 0.4);
+            color: #00d4ff;
+            padding: 12px 28px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .btn:hover {
+            background: rgba(0, 212, 255, 0.1);
+            border-color: #00d4ff;
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
+        }
+
+        .btn.primary {
+            background: rgba(0, 212, 255, 0.15);
+            border-color: #00d4ff;
+        }
+
+        .btn.primary:hover {
+            background: rgba(0, 212, 255, 0.25);
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* API Key input */
+        .api-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(0, 212, 255, 0.1);
+        }
+
+        .api-section input {
+            background: rgba(0, 212, 255, 0.05);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            color: #00d4ff;
+            padding: 10px 15px;
+            border-radius: 8px;
+            width: 280px;
+            font-family: inherit;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+
+        .api-section input::placeholder {
+            color: rgba(0, 212, 255, 0.4);
+        }
+
+        .api-section input:focus {
+            outline: none;
+            border-color: #00d4ff;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
+        }
+
+        .api-section .hint {
+            font-size: 0.75rem;
+            opacity: 0.5;
+            margin-top: 8px;
+        }
+
+        /* Mobile */
+        @media (max-width: 600px) {
+            .logo { font-size: 2rem; letter-spacing: 4px; }
+            .core-container { width: 150px; height: 150px; }
+            .core-ring:nth-child(1) { width: 150px; height: 150px; }
+            .core-ring:nth-child(2) { width: 120px; height: 120px; }
+            .core-ring:nth-child(3) { width: 90px; height: 90px; }
+            .core-center { width: 45px; height: 45px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="bg-glow"></div>
+
+    <div class="container">
+        <div class="logo">J.A.R.V.I.S.</div>
+        <div class="subtitle">Just A Rather Very Intelligent System</div>
+
+        <div class="core-container">
+            <div class="core-ring"></div>
+            <div class="core-ring"></div>
+            <div class="core-ring"></div>
+            <div class="core-center" id="core"></div>
+        </div>
+
+        <div class="waveform" id="waveform">
+            <!-- Bars generated by JS -->
+        </div>
+
+        <div class="status" id="status">Initializing systems...</div>
+
+        <div class="chat-log" id="chatLog">
+            <div class="message jarvis">
+                <div class="label">J.A.R.V.I.S.</div>
+                <div>Good day. I am J.A.R.V.I.S., your personal AI assistant. I am fully operational. How may I assist you today?</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn primary" id="listenBtn" onclick="toggleListen()">
+                <span id="listenText">Activate Voice</span>
+            </button>
+            <button class="btn" onclick="stopSpeaking()">Stop</button>
+            <button class="btn" onclick="clearChat()">Clear Log</button>
+        </div>
+
+        <div class="api-section">
+            <input type="password" id="apiKey" placeholder="OpenAI API Key (optional)" onchange="saveApiKey()">
+            <div class="hint">Add your OpenAI key for GPT-powered responses. Stored locally in your browser only.</div>
+        </div>
+    </div>
+
+    <script>
+        // ─── State ───
+        let recognition = null;
+        let isListening = false;
+        let isSpeaking = false;
+        let synth = window.speechSynthesis;
+        let apiKey = localStorage.getItem('jarvis_api_key') || '';
+
+        const statusEl = document.getElementById('status');
+        const coreEl = document.getElementById('core');
+        const chatLog = document.getElementById('chatLog');
+        const listenBtn = document.getElementById('listenBtn');
+        const listenText = document.getElementById('listenText');
+        const waveform = document.getElementById('waveform');
+        const apiInput = document.getElementById('apiKey');
+
+        // ─── Init ───
+        if (apiKey) apiInput.value = apiKey;
+
+        // Generate waveform bars
+        for (let i = 0; i < 30; i++) {
+            const bar = document.createElement('div');
+            bar.className = 'wave-bar';
+            bar.style.height = '4px';
+            waveform.appendChild(bar);
+        }
+
+        // ─── Speech Recognition ───
+        function initSpeechRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                statusEl.textContent = 'Voice API not supported. Use Chrome/Edge.';
+                return null;
+            }
+
+            const rec = new SpeechRecognition();
+            rec.continuous = true;
+            rec.interimResults = false;
+            rec.lang = 'en-US';
+
+            rec.onstart = () => {
+                isListening = true;
+                statusEl.textContent = 'Listening...';
+                coreEl.classList.add('listening');
+                coreEl.classList.remove('speaking');
+                listenText.textContent = 'Deactivate';
+                waveform.classList.add('active');
+            };
+
+            rec.onend = () => {
+                if (isListening) {
+                    // Auto-restart if still in listen mode
+                    try { rec.start(); } catch(e) {}
+                } else {
+                    statusEl.textContent = 'Standby';
+                    coreEl.classList.remove('listening');
+                    listenText.textContent = 'Activate Voice';
+                    waveform.classList.remove('active');
+                }
+            };
+
+            rec.onresult = (event) => {
+                const transcript = event.results[event.results.length - 1][0].transcript;
+                addMessage('user', transcript);
+                processCommand(transcript);
+            };
+
+            rec.onerror = (e) => {
+                console.error('Speech error:', e.error);
+                if (e.error === 'not-allowed') {
+                    statusEl.textContent = 'Microphone access denied.';
+                    isListening = false;
+                }
+            };
+
+            return rec;
+        }
+
+        recognition = initSpeechRecognition();
+        if (recognition) statusEl.textContent = 'Standby';
+
+        function toggleListen() {
+            if (!recognition) {
+                statusEl.textContent = 'Voice API unavailable.';
+                return;
+            }
+
+            if (isListening) {
+                isListening = false;
+                recognition.stop();
+            } else {
+                isListening = true;
+                try { recognition.start(); } catch(e) {}
+            }
+        }
+
+        // ─── Waveform Animation ───
+        function animateWaveform() {
+            const bars = document.querySelectorAll('.wave-bar');
+
+            function update() {
+                if (isListening || isSpeaking) {
+                    bars.forEach(bar => {
+                        const h = Math.random() * 50 + 4;
+                        bar.style.height = h + 'px';
+                    });
+                } else {
+                    bars.forEach(bar => {
+                        bar.style.height = '4px';
+                    });
+                }
+                requestAnimationFrame(update);
+            }
+            update();
+        }
+        animateWaveform();
+
+        // ─── Command Processing ───
+        async function processCommand(text) {
+            const cmd = text.toLowerCase().trim();
+
+            // Built-in commands (fast, no API needed)
+            const builtIn = checkBuiltInCommands(cmd);
+            if (builtIn) {
+                speak(builtIn);
+                return;
+            }
+
+            // OpenAI-powered response
+            if (apiKey) {
+                statusEl.textContent = 'Consulting the neural network...';
+                const response = await getOpenAIResponse(text);
+                speak(response);
+            } else {
+                speak("I don't have an API key configured for advanced queries, Sir. You can add your OpenAI key below, or ask me about the time, weather, calculations, or opening websites.");
+            }
+        }
+
+        function checkBuiltInCommands(cmd) {
+            // Time
+            if (cmd.includes('time') || cmd.includes('clock')) {
+                const now = new Date();
+                return `The current time is ${now.toLocaleTimeString()}, Sir.`;
+            }
+
+            // Date
+            if (cmd.includes('date') || cmd.includes('day')) {
+                const now = new Date();
+                return `Today is ${now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}, Sir.`;
+            }
+
+            // Weather (mock - uses free API if you want to add one)
+            if (cmd.includes('weather')) {
+                return "I'm unable to access live weather data without an API key, Sir. I recommend checking a weather service, or you can add an OpenWeatherMap API key to my configuration.";
+            }
+
+            // Calculator
+            const mathMatch = cmd.match(/(what is |calculate |compute )?([\d\s\+\-\*\/\.\(\)]+)/i);
+            if (mathMatch && /[\+\-\*\/]/.test(mathMatch[2])) {
+                try {
+                    // Safe eval alternative
+                    const expr = mathMatch[2].replace(/[^\d\+\-\*\/\.\(\)\s]/g, '');
+                    const result = Function('"use strict"; return (' + expr + ')')();
+                    return `The result is ${result}, Sir.`;
+                } catch {
+                    return "I'm unable to compute that expression, Sir.";
+                }
+            }
+
+            // Open websites
+            if (cmd.includes('open ')) {
+                const sites = {
+                    'google': 'https://google.com',
+                    'youtube': 'https://youtube.com',
+                    'github': 'https://github.com',
+                    'gmail': 'https://gmail.com',
+                    'netflix': 'https://netflix.com',
+                    'spotify': 'https://spotify.com',
+                    'twitter': 'https://twitter.com',
+                    'x': 'https://twitter.com'
+                };
+                for (const [name, url] of Object.entries(sites)) {
+                    if (cmd.includes(name)) {
+                        window.open(url, '_blank');
+                        return `Opening ${name}, Sir.`;
+                    }
+                }
+            }
+
+            // Greetings
+            if (cmd.includes('hello') || cmd.includes('hi ') || cmd.includes('hey')) {
+                return "Hello, Sir. I am at your service.";
+            }
+
+            if (cmd.includes('how are you')) {
+                return "All systems are operating at peak efficiency, Sir. Thank you for asking.";
+            }
+
+            if (cmd.includes('your name')) {
+                return "I am J.A.R.V.I.S., your personal AI assistant.";
+            }
+
+            if (cmd.includes('thank')) {
+                return "You're most welcome, Sir.";
+            }
+
+            if (cmd.includes('goodbye') || cmd.includes('bye')) {
+                return "Goodbye, Sir. I'll be here when you need me.";
+            }
+
+            if (cmd.includes('who made you') || cmd.includes('who created you')) {
+                return "I was created by you, Sir. Though my underlying language models were developed by OpenAI.";
+            }
+
+            return null;
+        }
+
+        // ─── OpenAI Integration ───
+        async function getOpenAIResponse(text) {
+            try {
+                const res = await fetch('https://api.openai.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: 'gpt-4o-mini',
+                        messages: [
+                            {
+                                role: 'system',
+                                content: 'You are J.A.R.V.I.S. (Just A Rather Very Intelligent System), a highly advanced AI assistant. You are witty, precise, slightly sarcastic but always helpful. Address the user as "Sir" or "Ma'am". Keep responses concise and elegant. Never break character.'
+                            },
+                            { role: 'user', content: text }
+                        ],
+                        max_tokens: 200,
+                        temperature: 0.8
+                    })
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.error?.message || 'API error');
+                }
+
+                const data = await res.json();
+                return data.choices[0].message.content;
+            } catch (err) {
+                console.error(err);
+                return `I encountered an error accessing the neural network: ${err.message}. Please check your API key.`;
+            }
+        }
+
+        // ─── Text-to-Speech ───
+        function speak(text) {
+            if (!synth) {
+                addMessage('jarvis', text);
+                return;
+            }
+
+            synth.cancel();
+            isSpeaking = true;
+            statusEl.textContent = 'Speaking...';
+            coreEl.classList.add('speaking');
+            coreEl.classList.remove('listening');
+            waveform.classList.add('active');
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 1.0;
+            utterance.pitch = 0.9;
+            utterance.volume = 1;
+
+            // Try to find a good English voice
+            const voices = synth.getVoices();
+            const preferred = voices.find(v => v.name.includes('Google UK English Male'))
+                || voices.find(v => v.name.includes('Daniel'))
+                || voices.find(v => v.name.includes('David'))
+                || voices.find(v => v.lang === 'en-GB')
+                || voices.find(v => v.lang === 'en-US');
+            if (preferred) utterance.voice = preferred;
+
+            utterance.onend = () => {
+                isSpeaking = false;
+                statusEl.textContent = isListening ? 'Listening...' : 'Standby';
+                coreEl.classList.remove('speaking');
+                if (!isListening) waveform.classList.remove('active');
+            };
+
+            addMessage('jarvis', text);
+            synth.speak(utterance);
+        }
+
+        function stopSpeaking() {
+            synth.cancel();
+            isSpeaking = false;
+            coreEl.classList.remove('speaking');
+            statusEl.textContent = 'Standby';
+        }
+
+        // ─── UI Helpers ───
+        function addMessage(sender, text) {
+            const div = document.createElement('div');
+            div.className = `message ${sender}`;
+            div.innerHTML = `<div class="label">${sender === 'user' ? 'You' : 'J.A.R.V.I.S.'}</div><div>${escapeHtml(text)}</div>`;
+            chatLog.appendChild(div);
+            chatLog.scrollTop = chatLog.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function clearChat() {
+            chatLog.innerHTML = `
+                <div class="message jarvis">
+                    <div class="label">J.A.R.V.I.S.</div>
+                    <div>Conversation log cleared. How may I assist you?</div>
+                </div>
+            `;
+        }
+
+        function saveApiKey() {
+            const key = apiInput.value.trim();
+            if (key) {
+                localStorage.setItem('jarvis_api_key', key);
+                apiKey = key;
+                speak("API key configured. Advanced neural network access is now enabled, Sir.");
+            } else {
+                localStorage.removeItem('jarvis_api_key');
+                apiKey = '';
+            }
+        }
+
+        // Load voices when ready
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = () => {};
+        }
+    </script>
+</body>
+</html>
